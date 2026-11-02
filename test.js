@@ -46,3 +46,15 @@ test('comments, negation and defaults', () => {
   assert.strictEqual(dotted('.env', '*'), true)
   assert.strictEqual(minimatch('.env', '*'), false)
 })
+
+test('copies of a wrapper RegExp fail closed', () => {
+  const re = minimatch.makeRe('*.js')
+  assert.strictEqual(new RegExp(re).test('anything'), false)
+  assert.strictEqual(new RegExp(re.source).test('a.js'), false)
+  assert.strictEqual('a.js'.replace(re, 'X'), 'X')
+  assert.strictEqual('a.md'.replace(re, 'X'), 'a.md')
+  assert.strictEqual('a.js'.search(re), 0)
+  assert.strictEqual('a.md'.search(re), -1)
+  assert.strictEqual(minimatch.makeRe('#comment'), false)
+  assert.strictEqual(minimatch.makeRe(''), false)
+})

@@ -7,10 +7,12 @@
 const mm11 = require('minimatch')
 
 // A RegExp that defers to a minimatch 11 matcher, so `str.match(re)`,
-// `re.test(str)` and `re._glob` behave as they did with minimatch 3.
+// `re.test(str)` and `re._glob` behave as they did with minimatch 3. Its own
+// source never matches, so a copy made with `new RegExp(re)` or `re.source`
+// fails closed instead of matching everything.
 class MatcherRegExp extends RegExp {
   constructor (test, glob, matcher) {
-    super('(?:)')
+    super('(?!)')
     this._test = test
     this._glob = glob
     this._matcher = matcher
@@ -32,6 +34,7 @@ class MatcherRegExp extends RegExp {
   }
 
   [Symbol.match] (str) { return this.exec(str) }
+  [Symbol.search] (str) { return this._test(String(str)) ? 0 : -1 }
 }
 
 const wrapSegment = (part) => {
@@ -46,6 +49,8 @@ class Minimatch extends mm11.Minimatch {
   }
 
   makeRe () {
+    // minimatch 3 returned false for patterns it could not compile.
+    if (this.comment || this.empty || !this.set.length) return false
     return new MatcherRegExp((s) => this.match(s), this.pattern)
   }
 }
@@ -71,7 +76,13 @@ minimatch.match = (list, pattern, options) => {
   if (options.nonull && !matched.length) matched.push(pattern)
   return matched
 }
-minimatch.makeRe = (pattern, options) => new Minimatch(pattern, options).makeRe()
+minimatch.makeRe = (pattern, options) => {
+  try {
+    return new Minimatch(pattern, options).makeRe()
+  } catch {
+    return false
+  }
+}
 minimatch.defaults = (def) => {
   if (!def || typeof def !== 'object' || !Object.keys(def).length) return minimatch
   const orig = minimatch
