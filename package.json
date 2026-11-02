@@ -1,0 +1,14 @@
+{
+  "name": "minimatch-cjs",
+  "version": "1.0.0",
+  "description": "minimatch 11 behind the callable minimatch 3/5 CommonJS API, for npm overrides of packages that still require minimatch 3 or 5 (GHSA-g3hv-75wg-m249 has no backport).",
+  "main": "index.js",
+  "files": ["index.js"],
+  "license": "ISC",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "minimatch": "11.0.3"
+  }
+}
